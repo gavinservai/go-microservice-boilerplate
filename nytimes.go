@@ -10,7 +10,7 @@ import (
 
 const (
 	// RedisAddress is the address of the Redis cluster
-	RedisAddress = "127.0.0.1:6379"
+	RedisAddress = "192.168.0.167:6379"
 )
 
 var (
