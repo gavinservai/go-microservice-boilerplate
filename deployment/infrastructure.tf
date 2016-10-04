@@ -71,6 +71,26 @@ resource "aws_security_group" "allow_all_ssh" {
     }
 }
 
+resource "aws_security_group" "redis" {
+    name_prefix = "${module.vpc.vpc_id}-"
+    vpc_id = "${module.vpc.vpc_id}"
+
+    ingress = {
+        from_port = 0
+        to_port = 6379
+        protocol = "tcp"
+        self = true
+    }
+
+    egress = {
+        from_port = 0
+        to_port = 6379
+        protocol = "tcp"
+        self = true
+    }
+}
+
+
 resource "aws_iam_role" "ecs" {
     name = "ecs"
     assume_role_policy = <<EOF
@@ -139,6 +159,12 @@ resource "aws_ecs_task_definition" "hello_service" {
         "cpu": 0,
         "memory": 128,
         "essential": true,
+        "environment": [
+          {
+              "name": "REDIS_CLUSTER_ADDRESS",
+              "value": "${aws_elasticache_cluster.hello_redis_cluster.cache_nodes.0.address}:${aws_elasticache_cluster.hello_redis_cluster.cache_nodes.0.port}"
+          }
+        ],
         "portMappings": [
           {
             "containerPort": 80,
@@ -213,6 +239,7 @@ resource "aws_launch_configuration" "ecs_cluster" {
         "${aws_security_group.allow_all_ssh.id}",
         "${aws_security_group.allow_all_outbound.id}",
         "${aws_security_group.allow_cluster.id}",
+        "${aws_security_group.redis.id}"
     ]
     user_data = "${template_file.user_data.rendered}"
     key_name = "aws-eb"
@@ -226,6 +253,21 @@ resource "aws_autoscaling_group" "ecs_cluster" {
     desired_capacity = 3
     launch_configuration = "${aws_launch_configuration.ecs_cluster.name}"
     health_check_type = "EC2"
+}
+
+resource "aws_elasticache_subnet_group" "elasticache_subnet" {
+  name = "elasticache-subnet"
+  subnet_ids = ["${module.vpc.public_subnets}"]
+}
+
+resource "aws_elasticache_cluster" "hello_redis_cluster" {
+    cluster_id = "hello-cache"
+    engine = "redis"
+    node_type = "cache.t2.micro"
+    port = 6379
+    num_cache_nodes = 1
+    subnet_group_name = "${aws_elasticache_subnet_group.elasticache_subnet.name}"
+    security_group_ids = ["${aws_security_group.redis.id}"]
 }
 
 variable "ami" {
