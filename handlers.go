@@ -20,6 +20,11 @@ func NameHandler(writer http.ResponseWriter, request *http.Request) {
 	fmt.Fprintf(writer, "Hello, %q", name)
 }
 
+// Outputs a simple welcome message to the end user
+func DefaultHandler(writer http.ResponseWriter, request *http.Request) {
+	fmt.Fprintf(writer, "Welcome")
+}
+
 // CountHandler retrieves the list of names persisted with their counts (see NameHandler)
 // This list is output in JSON to the end user
 func CountHandler(writer http.ResponseWriter, request *http.Request) {
@@ -38,5 +43,6 @@ func CountHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	jsonResponse, _ := json.Marshal(counts)
+	fmt.Fprintf(writer, "%s", string(jsonResponse))
 	fmt.Println(string(jsonResponse))
 }

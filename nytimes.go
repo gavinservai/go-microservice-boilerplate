@@ -4,20 +4,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/garyburd/redigo/redis"
 )
 
-const (
-	// RedisAddress is the address of the Redis cluster
-	RedisAddress = "192.168.0.167:6379"
-)
-
 var (
-	c, err = redis.Dial("tcp", RedisAddress)
+	redisAddress = os.Getenv("REDIS_CLUSTER_ADDRESS")
+	c, err       = redis.Dial("tcp", redisAddress)
 )
 
-// Names represents a set of Name
+// Names represents a set of Name (see Name struct)
 type Names struct {
 	Counts []Name `json:"counts"`
 }
@@ -39,5 +36,5 @@ func main() {
 	// Handle the Request
 	HandleRequest()
 
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	log.Fatal(http.ListenAndServe(":80", nil))
 }
