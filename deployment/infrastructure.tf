@@ -4,6 +4,7 @@ provider "aws" {
   region = "${var.region}"
 }
 
+# VPC for our infrastructure
 module "vpc" {
     source = "github.com/terraform-community-modules/tf_aws_vpc"
     name = "ecs-vpc"
@@ -12,6 +13,7 @@ module "vpc" {
     azs = ["us-west-2a", "us-west-2b"]
 }
 
+# Security group that allows all outbound traffic
 resource "aws_security_group" "allow_all_outbound" {
     name_prefix = "${module.vpc.vpc_id}-"
     description = "Allow all outbound traffic"
@@ -25,6 +27,7 @@ resource "aws_security_group" "allow_all_outbound" {
     }
 }
 
+# Security group that allows all inbound traffic
 resource "aws_security_group" "allow_all_inbound" {
     name_prefix = "${module.vpc.vpc_id}-"
     description = "Allow all inbound traffic"
@@ -38,6 +41,7 @@ resource "aws_security_group" "allow_all_inbound" {
     }
 }
 
+# Security group that allows all traffic between clusters
 resource "aws_security_group" "allow_cluster" {
     name_prefix = "${module.vpc.vpc_id}-"
     description = "Allow all traffic within cluster"
@@ -58,6 +62,7 @@ resource "aws_security_group" "allow_cluster" {
     }
 }
 
+# Security group that allows all inbound SSH traffic
 resource "aws_security_group" "allow_all_ssh" {
     name_prefix = "${module.vpc.vpc_id}-"
     description = "Allow all inbound SSH traffic"
@@ -71,6 +76,7 @@ resource "aws_security_group" "allow_all_ssh" {
     }
 }
 
+# Security group that allows connections for redis
 resource "aws_security_group" "redis" {
     name_prefix = "${module.vpc.vpc_id}-"
     vpc_id = "${module.vpc.vpc_id}"
@@ -90,7 +96,7 @@ resource "aws_security_group" "redis" {
     }
 }
 
-
+# Role to be assumed by the container service
 resource "aws_iam_role" "ecs" {
     name = "ecs"
     assume_role_policy = <<EOF
@@ -110,12 +116,14 @@ resource "aws_iam_role" "ecs" {
 EOF
 }
 
+# Attaches ecs policy to the ecs role
 resource "aws_iam_policy_attachment" "ecs_for_ec2" {
     name = "ecs-for-ec2"
     roles = ["${aws_iam_role.ecs.id}"]
     policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
 }
 
+# Role for the service load balancer
 resource "aws_iam_role" "ecs_elb" {
     name = "ecs-elb"
     assume_role_policy = <<EOF
@@ -135,20 +143,24 @@ resource "aws_iam_role" "ecs_elb" {
 EOF
 }
 
+# Attaches ecs policy to the ecs_elb role
 resource "aws_iam_policy_attachment" "ecs_elb" {
     name = "ecs_elb"
     roles = ["${aws_iam_role.ecs_elb.id}"]
     policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole"
 }
 
+# ECS cluster
 resource "aws_ecs_cluster" "hello" {
     name = "ecs-hello"
 }
 
+# Repository to store docker images of service
 resource "aws_ecr_repository" "hello-repository" {
   name = "hello-repository"
 }
 
+# Task definition for the service
 resource "aws_ecs_task_definition" "hello_service" {
     family = "hello_service"
     container_definitions = <<EOF
@@ -176,6 +188,7 @@ resource "aws_ecs_task_definition" "hello_service" {
 EOF
 }
 
+# Load balancer for ECS instances
 resource "aws_elb" "hello_service_elb" {
     name = "hello-service-elb"
     subnets = ["${module.vpc.public_subnets}"]
@@ -203,6 +216,7 @@ resource "aws_elb" "hello_service_elb" {
     }
 }
 
+# ECS Service
 resource "aws_ecs_service" "hello_service" {
     name = "hello-service"
     cluster = "${aws_ecs_cluster.hello.id}"
@@ -225,11 +239,13 @@ resource "template_file" "user_data" {
     }
 }
 
+# Instance profile for the launch configuration
 resource "aws_iam_instance_profile" "ecs" {
     name = "ecs-profile"
     roles = ["${aws_iam_role.ecs.name}"]
 }
 
+# The launch configuration for an instance
 resource "aws_launch_configuration" "ecs_cluster" {
     name = "ecs_cluster_conf"
     instance_type = "t2.micro"
@@ -245,6 +261,7 @@ resource "aws_launch_configuration" "ecs_cluster" {
     key_name = "aws-eb"
 }
 
+# Autoscaling group for the cluster. Currently set to a fixed number
 resource "aws_autoscaling_group" "ecs_cluster" {
     name = "ecs-cluster"
     vpc_zone_identifier = ["${module.vpc.public_subnets}"]
@@ -255,11 +272,13 @@ resource "aws_autoscaling_group" "ecs_cluster" {
     health_check_type = "EC2"
 }
 
+# Subnet group for elasticache
 resource "aws_elasticache_subnet_group" "elasticache_subnet" {
   name = "elasticache-subnet"
   subnet_ids = ["${module.vpc.public_subnets}"]
 }
 
+# Elasticache cluster running redis
 resource "aws_elasticache_cluster" "hello_redis_cluster" {
     cluster_id = "hello-cache"
     engine = "redis"
