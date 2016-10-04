@@ -5,221 +5,239 @@ provider "aws" {
 }
 
 module "vpc" {
-  source = "github.com/terraform-community-modules/tf_aws_vpc"
-  name = "hello-service-vpc"
-  cidr = "10.0.0.0/16"
-  public_subnets  = ["10.0.101.0/24","10.0.102.0/24"]
-  azs = ["us-west-2a", "us-west-2b"]
+    source = "github.com/terraform-community-modules/tf_aws_vpc"
+    name = "ecs-vpc"
+    cidr = "10.0.0.0/16"
+    public_subnets  = ["10.0.101.0/24", "10.0.102.0/24"]
+    azs = ["us-west-2a", "us-west-2b"]
 }
 
 resource "aws_security_group" "allow_all_outbound" {
-  name_prefix = "hello-service-"
-  description = "Allow all outbound traffic"
-  vpc_id = "${module.vpc.vpc_id}"
+    name_prefix = "${module.vpc.vpc_id}-"
+    description = "Allow all outbound traffic"
+    vpc_id = "${module.vpc.vpc_id}"
 
-  egress = {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+    egress = {
+        from_port = 0
+        to_port = 0
+        protocol = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
 }
 
 resource "aws_security_group" "allow_all_inbound" {
-  name_prefix = "hello-service-"
-  description = "Allow all inbound traffic"
-  vpc_id = "${module.vpc.vpc_id}"
+    name_prefix = "${module.vpc.vpc_id}-"
+    description = "Allow all inbound traffic"
+    vpc_id = "${module.vpc.vpc_id}"
 
-  ingress = {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+    ingress = {
+        from_port = 0
+        to_port = 0
+        protocol = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
 }
 
 resource "aws_security_group" "allow_cluster" {
-  name_prefix = "hello-service-"
-  description = "Allow all traffic within cluster"
-  vpc_id = "${module.vpc.vpc_id}"
+    name_prefix = "${module.vpc.vpc_id}-"
+    description = "Allow all traffic within cluster"
+    vpc_id = "${module.vpc.vpc_id}"
 
-  ingress = {
-    from_port = 0
-    to_port = 65535
-    protocol = "tcp"
-    self = true
-  }
+    ingress = {
+        from_port = 0
+        to_port = 65535
+        protocol = "tcp"
+        self = true
+    }
 
-  egress = {
-    from_port = 0
-    to_port = 65535
-    protocol = "tcp"
-    self = true
-  }
-}
-
-# Load Balancer for ECS
-resource "aws_elb" "hello-service-balancer" {
-    name = "hello-service-balancer"
-    subnets = ["${module.vpc.public_subnets}"]
-    security_groups = [
-      "${aws_security_group.allow_cluster.id}",
-      "${aws_security_group.allow_all_inbound.id}",
-      "${aws_security_group.allow_all_outbound.id}"
-    ]
-
-    listener {
-        lb_port = 80
-        lb_protocol = "http"
-        instance_port = 80
-        instance_protocol = "http"
+    egress = {
+        from_port = 0
+        to_port = 65535
+        protocol = "tcp"
+        self = true
     }
 }
 
-# ECS Cluster
-resource "aws_ecs_cluster" "hello-service-cluster" {
-    name = "hello-service-cluster"
+resource "aws_security_group" "allow_all_ssh" {
+    name_prefix = "${module.vpc.vpc_id}-"
+    description = "Allow all inbound SSH traffic"
+    vpc_id = "${module.vpc.vpc_id}"
+
+    ingress = {
+        from_port = 22
+        to_port = 22
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
 }
 
-# Auto-Scaling Group for Cluster
-resource "aws_autoscaling_group" "hello-service-cluster-instances" {
-  name = "hello-service-cluster-instances"
-  vpc_zone_identifier = ["${module.vpc.public_subnets}"]
-  min_size = 3
-  max_size = 5
-  launch_configuration = "${aws_launch_configuration.hello-service-instance.name}"
-}
-
-# Profile for ECS EC2 instance
-resource "aws_iam_instance_profile" "ecs-iam-profile" {
-  name = "ecs-iam-profile"
-  roles = ["${aws_iam_role.ecs_role.name}"]
-}
-
-# Instance Configuration for Cluster
-resource "aws_launch_configuration" "hello-service-instance" {
-  name_prefix = "hello-service-instance-"
-  instance_type = "t2.micro"
-  image_id = "ami-1ccd1f7c"
-  iam_instance_profile = "${aws_iam_instance_profile.ecs-iam-profile.id}"
-  security_groups = [
-    "${aws_security_group.allow_all_outbound.id}",
-    "${aws_security_group.allow_cluster.id}",
-  ]
-  associate_public_ip_address = true
-}
-
-# Docker Image Repository for ECS
-resource "aws_ecr_repository" "nytimes-hello-repository" {
-  name = "nytimes-hello-repository"
-}
-
-# ECS Task
-resource "aws_ecs_task_definition" "hello-service-task" {
-  family = "hello-service-task"
-  container_definitions = <<EOF
-  [
+resource "aws_iam_role" "ecs" {
+    name = "ecs"
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
     {
-      "name": "hello-service-task",
-      "image": "${aws_ecr_repository.nytimes-hello-repository.repository_url}:latest",
-      "cpu": 10,
-      "memory": 500,
-      "essential": true,
-      "portMappings": [
-        {
-          "containerPort": 80,
-          "hostPort": 80
-        }
-      ],
-      "environment": [{
-        "name": "REDIS_CLUSTER_ADDRESS",
-        "value": "${aws_elasticache_cluster.hello-service-cache.cache_nodes.0.address}:${aws_elasticache_cluster.hello-service-cache.cache_nodes.0.port}"
-      }]
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
     }
   ]
+}
 EOF
 }
 
-# IAM Role, necessary to use Balancer
-resource "aws_iam_role" "ecs_role" {
-    name = "nytimes_hello_role"
-    assume_role_policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Action": "sts:AssumeRole",
-        "Principal": {
-          "Service": "ec2.amazonaws.com"
-        },
-        "Effect": "Allow",
-        "Sid": ""
-      }
-    ]
-  }
-  EOF
-}
-
-
-# Policy Attaching EC2 for the ECS Role
-resource "aws_iam_policy_attachment" "ec2_for_ecs_role" {
-    name = "ec2_for_ecs_role"
-    roles = ["${aws_iam_role.ecs_role.id}"]
+resource "aws_iam_policy_attachment" "ecs_for_ec2" {
+    name = "ecs-for-ec2"
+    roles = ["${aws_iam_role.ecs.id}"]
     policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
 }
 
-# Role for Load Balancer
-resource "aws_iam_role" "ecs_elb_role" {
-  name = "ecs_elb_role"
-  assume_role_policy = <<EOF
+resource "aws_iam_role" "ecs_elb" {
+    name = "ecs-elb"
+    assume_role_policy = <<EOF
 {
-    "Version": "2012-10-17",
-    "Statement": [
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ecs.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy_attachment" "ecs_elb" {
+    name = "ecs_elb"
+    roles = ["${aws_iam_role.ecs_elb.id}"]
+    policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole"
+}
+
+resource "aws_ecs_cluster" "hello" {
+    name = "ecs-hello"
+}
+
+resource "aws_ecr_repository" "hello-repository" {
+  name = "hello-repository"
+}
+
+resource "aws_ecs_task_definition" "hello_service" {
+    family = "hello_service"
+    container_definitions = <<EOF
+    [
       {
-        "Sid": "",
-        "Effect": "Allow",
-        "Principal": {
-          "Service": "ecs.amazonaws.com"
-        },
-        "Action": "sts:AssumeRole"
+        "name": "hello-service",
+        "image": "${aws_ecr_repository.hello-repository.registry_id}.dkr.ecr.${var.region}.amazonaws.com/${aws_ecr_repository.hello-repository.name}:latest",
+        "cpu": 0,
+        "memory": 128,
+        "essential": true,
+        "portMappings": [
+          {
+            "containerPort": 80,
+            "hostPort": 80
+          }
+        ]
       }
     ]
-  }
-  EOF
+EOF
 }
 
-# Policy Attaching EC2 for ELB Role
-resource "aws_iam_policy_attachment" "ec2_for_ecs_elb_role" {
-  name = "ec2_for_ecs_elb_role"
-  roles = ["${aws_iam_role.ecs_elb_role.id}"]
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole"
+resource "aws_elb" "hello_service_elb" {
+    name = "hello-service-elb"
+    subnets = ["${module.vpc.public_subnets}"]
+    connection_draining = true
+    cross_zone_load_balancing = true
+    security_groups = [
+        "${aws_security_group.allow_cluster.id}",
+        "${aws_security_group.allow_all_inbound.id}",
+        "${aws_security_group.allow_all_outbound.id}"
+    ]
+
+    listener {
+        instance_port = 80
+        instance_protocol = "http"
+        lb_port = 80
+        lb_protocol = "http"
+    }
+
+    health_check {
+        healthy_threshold = 2
+        unhealthy_threshold = 10
+        target = "HTTP:80/"
+        interval = 5
+        timeout = 4
+    }
 }
 
-# ECS Service with Balancer
-resource "aws_ecs_service" "hello-service" {
-  name = "hello-service"
-  cluster = "${aws_ecs_cluster.hello-service-cluster.id}"
-  task_definition = "${aws_ecs_task_definition.hello-service-task.arn}"
-  desired_count = 5
-  iam_role = "${aws_iam_role.ecs_elb_role.arn}"
-  depends_on = ["aws_iam_policy_attachment.ec2_for_ecs_elb_role"]
+resource "aws_ecs_service" "hello_service" {
+    name = "hello-service"
+    cluster = "${aws_ecs_cluster.hello.id}"
+    task_definition = "${aws_ecs_task_definition.hello_service.arn}"
+    desired_count = 1
+    iam_role = "${aws_iam_role.ecs_elb.arn}"
+    depends_on = ["aws_iam_policy_attachment.ecs_elb"]
 
-  load_balancer {
-      elb_name = "${aws_elb.hello-service-balancer.id}"
-      container_name = "hello-service-task"
-      container_port = 80
-  }
+    load_balancer {
+        elb_name = "${aws_elb.hello_service_elb.id}"
+        container_name = "hello-service"
+        container_port = 80
+    }
 }
 
-# Elasticache Cluster
-resource "aws_elasticache_cluster" "hello-service-cache" {
-    cluster_id = "hello-cache"
-    engine = "redis"
-    node_type = "cache.t2.micro"
-    port = 6379
-    num_cache_nodes = 1
+resource "template_file" "user_data" {
+    template = "templates/user_data"
+    vars {
+        cluster_name = "ecs-hello"
+    }
 }
 
-output "docker repository" {
-    value = "${aws_ecr_repository.nytimes-hello-repository.repository_url}"
+resource "aws_iam_instance_profile" "ecs" {
+    name = "ecs-profile"
+    roles = ["${aws_iam_role.ecs.name}"]
+}
+
+resource "aws_launch_configuration" "ecs_cluster" {
+    name = "ecs_cluster_conf"
+    instance_type = "t2.micro"
+    image_id = "${lookup(var.ami, var.region)}"
+    iam_instance_profile = "${aws_iam_instance_profile.ecs.id}"
+    security_groups = [
+        "${aws_security_group.allow_all_ssh.id}",
+        "${aws_security_group.allow_all_outbound.id}",
+        "${aws_security_group.allow_cluster.id}",
+    ]
+    user_data = "${template_file.user_data.rendered}"
+    key_name = "aws-eb"
+}
+
+resource "aws_autoscaling_group" "ecs_cluster" {
+    name = "ecs-cluster"
+    vpc_zone_identifier = ["${module.vpc.public_subnets}"]
+    min_size = 0
+    max_size = 3
+    desired_capacity = 3
+    launch_configuration = "${aws_launch_configuration.ecs_cluster.name}"
+    health_check_type = "EC2"
+}
+
+variable "ami" {
+    description = "AWS ECS AMI id"
+    default = {
+        us-east-1 = "ami-cb2305a1"
+        us-west-1 = "ami-bdafdbdd"
+        us-west-2 = "ami-ec75908c"
+        eu-west-1 = "ami-13f84d60"
+        eu-central-1 =  "ami-c3253caf"
+        ap-northeast-1 = "ami-e9724c87"
+        ap-southeast-1 = "ami-5f31fd3c"
+        ap-southeast-2 = "ami-83af8ae0"
+    }
 }
