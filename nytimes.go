@@ -25,6 +25,15 @@ type Name struct {
 	Count string `json:"count"`
 }
 
+// NodeHealth represents a dataset of basic health information for a node
+type NodeHealth struct {
+	UpTime            uint64  `json:"uptime"`
+	CPUPercent        float64 `json:"cpu_utilization_percent"`
+	DiskPercent       float64 `json:"disk_utilization_percent"`
+	RAMTotalUsed      uint64  `json:"total_ram_used"`
+	RAMTotalAvailable uint64  `json:"total_ram_available"`
+}
+
 // CountName takes the supplied string, and increments a score for it on a Redis Sorted Set
 func CountName(name string) {
 	c.Send("ZINCRBY", "nytimes.names", 1, name)

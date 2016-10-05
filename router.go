@@ -11,6 +11,7 @@ func HandleRequest() {
 	r := mux.NewRouter()
 	r.HandleFunc("/hello/{name}", NameHandler)
 	r.HandleFunc("/count", CountHandler)
+	r.HandleFunc("/health", HealthHandler)
 	r.HandleFunc("/", DefaultHandler)
 
 	http.Handle("/", r)
