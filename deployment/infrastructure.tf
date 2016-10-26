@@ -7,6 +7,7 @@ provider "aws" {
 # VPC for our infrastructure
 module "vpc" {
     source = "github.com/terraform-community-modules/tf_aws_vpc"
+    enable_dns_support = true
     name = "ecs-vpc"
     cidr = "10.0.0.0/16"
     public_subnets  = ["10.0.101.0/24", "10.0.102.0/24"]
@@ -52,6 +53,7 @@ resource "aws_security_group" "allow_cluster" {
         to_port = 65535
         protocol = "tcp"
         self = true
+        cidr_blocks = ["10.0.0.0/16"]
     }
 
     egress = {
@@ -116,11 +118,40 @@ resource "aws_iam_role" "ecs" {
 EOF
 }
 
+# Custom policy giving instance permissions to perform cluster health check
+resource "aws_iam_policy" "policy" {
+    name = "ecs_policy"
+    path = "/"
+    description = "Used by container instance to query for other container instances"
+    policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "elasticloadbalancing:DescribeLoadBalancers",
+        "ec2:DescribeInstances"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
 # Attaches ecs policy to the ecs role
 resource "aws_iam_policy_attachment" "ecs_for_ec2" {
     name = "ecs-for-ec2"
     roles = ["${aws_iam_role.ecs.id}"]
     policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
+
+# Attaches custom policy to the ecs role
+resource "aws_iam_policy_attachment" "ecs_health" {
+    name = "ecs-health"
+    roles = ["${aws_iam_role.ecs.id}"]
+    policy_arn = "${aws_iam_policy.policy.arn}"
 }
 
 # Role for the service load balancer
@@ -221,7 +252,7 @@ resource "aws_ecs_service" "hello_service" {
     name = "hello-service"
     cluster = "${aws_ecs_cluster.hello.id}"
     task_definition = "${aws_ecs_task_definition.hello_service.arn}"
-    desired_count = 1
+    desired_count = 2
     iam_role = "${aws_iam_role.ecs_elb.arn}"
     depends_on = ["aws_iam_policy_attachment.ecs_elb"]
 
