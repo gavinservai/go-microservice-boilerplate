@@ -206,6 +206,10 @@ resource "aws_ecs_task_definition" "hello_service" {
           {
               "name": "REDIS_CLUSTER_ADDRESS",
               "value": "${aws_elasticache_cluster.hello_redis_cluster.cache_nodes.0.address}:${aws_elasticache_cluster.hello_redis_cluster.cache_nodes.0.port}"
+          },
+          {
+              "name": "ELB_NAME",
+              "value": "${aws_elb.hello_service_elb.name}"
           }
         ],
         "portMappings": [
