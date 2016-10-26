@@ -23,7 +23,7 @@ func NameHandler(writer http.ResponseWriter, request *http.Request) {
 
 // DefaultHandler outputs a simple welcome message to the end user
 func DefaultHandler(writer http.ResponseWriter, request *http.Request) {
-	fmt.Fprintf(writer, "Welcome to the hello service")
+	fmt.Fprintf(writer, "Welcome to the Hello Service")
 }
 
 // CountHandler retrieves the list of names persisted with their counts (see NameHandler)

@@ -121,7 +121,7 @@ func GetClusterHealth(writer http.ResponseWriter) *ClusterHealth {
 // This method is only invoked on the deployed environment
 func getSession(writer http.ResponseWriter) *session.Session {
 	// Create new session
-	sess := session.New(&aws.Config{Region: aws.String("us-west-2")})
+	sess := session.New(&aws.Config{Region: aws.String(os.Getenv("AWS_REGION"))})
 	if err != nil {
 		fmt.Fprintf(writer, err.Error())
 		panic(err.Error())
@@ -137,7 +137,7 @@ func getEC2IdsFromELB(writer http.ResponseWriter, sess *session.Session) []*stri
 	elbService := elb.New(sess)
 	elbParams := &elb.DescribeLoadBalancersInput{
 		LoadBalancerNames: []*string{
-			aws.String("hello-service-elb"),
+			aws.String(os.Getenv("ELB_NAME")),
 		},
 	}
 

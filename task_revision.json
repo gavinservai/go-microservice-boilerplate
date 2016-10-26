@@ -12,6 +12,10 @@
           {
               "name": "REDIS_CLUSTER_ADDRESS",
               "value": "hello-cache.qomrhk.0001.usw2.cache.amazonaws.com:6379"
+          },
+          {
+              "name": "ELB_NAME",
+              "value": "hello-service-elb"
           }
         ],
         "portMappings": [
