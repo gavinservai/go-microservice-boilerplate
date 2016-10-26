@@ -4,14 +4,14 @@
     [
       {
         "name": "hello-service",
-        "image": "601458892984.dkr.ecr.us-west-2.amazonaws.com/hello-repository:latest",
+        "image": "",
         "cpu": 0,
         "memory": 128,
         "essential": true,
         "environment": [
           {
               "name": "REDIS_CLUSTER_ADDRESS",
-              "value": "hello-cache.qomrhk.0001.usw2.cache.amazonaws.com:6379"
+              "value": ""
           },
           {
               "name": "ELB_NAME",
