@@ -25,6 +25,11 @@ type Name struct {
 	Count string `json:"count"`
 }
 
+// ClusterHealth represents a set of NodeHealth
+type ClusterHealth struct {
+	NodeHealths []NodeHealth `json:"node_healths"`
+}
+
 // NodeHealth represents a dataset of basic health information for a node
 type NodeHealth struct {
 	UpTime            uint64  `json:"uptime"`

@@ -12,6 +12,7 @@ func HandleRequest() {
 	r.HandleFunc("/hello/{name}", NameHandler)
 	r.HandleFunc("/count", CountHandler)
 	r.HandleFunc("/health", HealthHandler)
+	r.HandleFunc("/health/cluster", ClusterHealthHandler)
 	r.HandleFunc("/", DefaultHandler)
 
 	http.Handle("/", r)
