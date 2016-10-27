@@ -88,8 +88,12 @@ The following must be set up locally:
  6. Search for `aws_elasticache_cluster`. Add the value of `cache_nodes.0.address` to your clipboard.
  7. In the project source directory, create a file called `task_revision.json`, pasting the contents of `task_revision_example.json`. Paste the value in your clipboard into the REDIS_CLUSTER_ADDRESS.
  8. Use `terraform show` to obtain the `repository_url` from `aws_ecr_repository.hello-repository`. Update the appropriate value in the `task_revision.json` file. Do not include the leading `https://`. Setting up the `task_revision.json` file is necessary for deploying service updates in the future.
+ 
  > **Note:**
 > The `terraform.tfstate` and `terraform.tfstate.backup` files that are generated should be kept (and likely committed to version control). These are necessary to iterate on the infrastructure of the service.
+> **Note:**
+> A Release Deployment must be run for the actual service to run on the infrastructure, as the Docker image must be pushed to the repository, and the service updated.
+
 
 ### Updating the Infrastructure
 1. Make changes as desired to `deployment/infrastructure.tf`
@@ -214,9 +218,10 @@ Local Machine:
 
 ## What Next?
 Improvements to consider for future iterations of Hello Service:
+
 - Aggregation of deployment commands into a simple script. This could be a shell script, or any other scripting language using the AWS SDK.
 - Log Centralization. It is currently necessary to SSH individually onto an instance to view the logs. Consider using the [ECS Log Collector](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/troubleshooting.html#ecs-logs-collector).
 - Redis connection management. If the connection to Redis is lost, this situation is not gracefully handled.
 - An Alert system for critical errors. Consider using something like Pager Duty.
 - Graceful JSON error responses
-
+- Output ECR Repository URL as well as Redis Address from infrastructure.tf

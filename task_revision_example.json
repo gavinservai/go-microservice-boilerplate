@@ -4,14 +4,14 @@
     [
       {
         "name": "hello-service",
-        "image": "",
+        "image": "ECR_REPOSITORY_URL_HERE:latest",
         "cpu": 0,
         "memory": 128,
         "essential": true,
         "environment": [
           {
               "name": "REDIS_CLUSTER_ADDRESS",
-              "value": ""
+              "value": "REDIS_NODE_ADDRESS_HERE:6379"
           },
           {
               "name": "ELB_NAME",

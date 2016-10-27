@@ -18,7 +18,7 @@ func NameHandler(writer http.ResponseWriter, request *http.Request) {
 
 	CountName(name)
 
-	fmt.Fprintf(writer, "Hello, %q", name)
+	fmt.Fprintf(writer, "Hello, %s!", name)
 }
 
 // DefaultHandler outputs a simple welcome message to the end user
