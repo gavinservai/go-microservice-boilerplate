@@ -16,10 +16,10 @@ Hello Service
   * [Requirements](#requirements-2)
   * [Updating the Service](#updating-the-service)
 - [Endpoints](#endpoints)
-  * [/hello/{name}](#-hello--name-)
-  * [/counts](#-counts)
-  * [/health](#-health)
-  * [/health/cluster](#-health-cluster)
+  * [/hello/{name}](#hello--name-)
+  * [/counts](#counts)
+  * [/health](#health)
+  * [/health/cluster](#health-cluster)
 - [What Next?](#what-next-)
 
 ----------
@@ -120,13 +120,13 @@ The following must be set up locally:
 ----------
 ## Endpoints
 
-### /hello/{name}
+### hello/{name}
 Outputs a hello message including the provided name, and updates a Sorted Set on Redis, containing the name and a score of how many times the name was provided to this endpoint.
 #### Example Output
 
     Hello, "{name}"
 
-### /counts
+### counts
 Outputs a JSON structure containing the names that have been provided to the hello endpoint coupled with a count of how many times they were provided.
 
 #### Example Output
@@ -144,7 +144,7 @@ Outputs a JSON structure containing the names that have been provided to the hel
 	  ]
 	}
 
-### /health
+### health
 Outputs a list of information about the server.
 
 #### Example Output
@@ -170,7 +170,7 @@ Local Machine:
    	  "total_ram_bytes_available": 947920896
    	}
 
-### /health/cluster
+### health/cluster
 Outputs the health of all cluster instances that are **currently active on the load balancer**.
 
 #### Example Output
