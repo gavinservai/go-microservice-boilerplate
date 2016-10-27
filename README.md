@@ -64,12 +64,14 @@ The following must be set up locally:
 2. Run `make`. This will statically compile the service and subsequently build a docker image. Run this whenever changes are made to the source code of the Go project.
 3. Run `redis-server`. This will initiate the local redis server. It may be desirable to run this on a separate terminal tab.
 4. Run `docker run --publish 80:80 --env-file ./.env nytimes/hello`. This will run the service on localhost port 80. The environment variables outlined in the .env are loaded into the image. It may be necessary to confirm that the REDIS_CLUSTER_ADDRESS is accurate.
+
 ### Stopping the Service
 1. Run `docker ps` to list the docker containers currently running.
 2. Use `docker kill CONTAINER_ID` or `docker stop CONTAINER_ID` to stop the service.
 
 
 ----------
+
 ## Infrastructure Deployment
 > **Note:**
 > Infrastructure Deployment has currently only been tested on OSX 10.11.5
@@ -80,6 +82,7 @@ The following must be set up locally:
 - [Terraform](https://www.terraform.io/) 
 
 ### Deploying the Infrastructure
+
  1. Navigate into the `deployment` directory of the project source.
  2. Run `terraform get`. This will install any terraform modules used.
  3. Run `terraform plan`. Follow the prompts. This will provide an overview of the infrastructure that will be deployed. Ensure that there are no errors before proceeding.
@@ -88,11 +91,11 @@ The following must be set up locally:
  6. Search for `aws_elasticache_cluster`. Add the value of `cache_nodes.0.address` to your clipboard.
  7. In the project source directory, create a file called `task_revision.json`, pasting the contents of `task_revision_example.json`. Paste the value in your clipboard into the REDIS_CLUSTER_ADDRESS.
  8. Use `terraform show` to obtain the `repository_url` from `aws_ecr_repository.hello-repository`. Update the appropriate value in the `task_revision.json` file. Do not include the leading `https://`. Setting up the `task_revision.json` file is necessary for deploying service updates in the future.
+ 9. The service will live at the address of the Load Balancer. Use `terraform show`, find `aws_elb.hello_service_elb`, and take the `dns_name`. Please note that a Release Deployment must be run for the actual service to run on the infrastructure, as the Docker image must be pushed to the repository, and the service updated with that image.
  
  > **Note:**
 > The `terraform.tfstate` and `terraform.tfstate.backup` files that are generated should be kept (and likely committed to version control). These are necessary to iterate on the infrastructure of the service.
-> **Note:**
-> A Release Deployment must be run for the actual service to run on the infrastructure, as the Docker image must be pushed to the repository, and the service updated.
+
 
 
 ### Updating the Infrastructure
@@ -123,15 +126,18 @@ The following must be set up locally:
 
 
 ----------
+
 ## Endpoints
 
 ### hello/{name}
+
 Outputs a hello message including the provided name, and updates a Sorted Set on Redis, containing the name and a score of how many times the name was provided to this endpoint.
 #### Example Output
 
     Hello, "{name}"
 
 ### counts
+
 Outputs a JSON structure containing the names that have been provided to the hello endpoint coupled with a count of how many times they were provided.
 
 #### Example Output
@@ -150,6 +156,7 @@ Outputs a JSON structure containing the names that have been provided to the hel
 	}
 
 ### health
+
 Outputs a list of information about the server.
 
 #### Example Output
@@ -176,6 +183,7 @@ Local Machine:
    	}
 
 ### health/cluster
+
 Outputs the health of all cluster instances that are **currently active on the load balancer**.
 
 #### Example Output
