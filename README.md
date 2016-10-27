@@ -16,10 +16,10 @@ Hello Service
   * [Requirements](#requirements-2)
   * [Updating the Service](#updating-the-service)
 - [Endpoints](#endpoints)
-  * [hello/{name}](#hello--name-)
+  * [hello/{name}](#helloname)
   * [counts](#counts)
   * [health](#health)
-  * [health/cluster](#health-cluster)
+  * [health/cluster](#healthcluster)
 - [What Next?](#what-next-)
 
 ----------
