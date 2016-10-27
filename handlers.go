@@ -26,9 +26,9 @@ func DefaultHandler(writer http.ResponseWriter, request *http.Request) {
 	fmt.Fprintf(writer, "Welcome to the Hello Service")
 }
 
-// CountHandler retrieves the list of names persisted with their counts (see NameHandler)
+// CountsHandler retrieves the list of names persisted with their counts (see NameHandler)
 // The resulting Names instance is output in JSON to the end user
-func CountHandler(writer http.ResponseWriter, request *http.Request) {
+func CountsHandler(writer http.ResponseWriter, request *http.Request) {
 	namesAndScores, _ := redis.Strings(c.Do("ZRANGE", "nytimes.names", 0, -1, "WITHSCORES"))
 
 	counts := new(Names)

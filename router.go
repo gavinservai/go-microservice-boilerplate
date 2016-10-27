@@ -10,7 +10,7 @@ import (
 func HandleRequest() {
 	r := mux.NewRouter()
 	r.HandleFunc("/hello/{name}", NameHandler)
-	r.HandleFunc("/count", CountHandler)
+	r.HandleFunc("/counts", CountsHandler)
 	r.HandleFunc("/health", HealthHandler)
 	r.HandleFunc("/health/cluster", ClusterHealthHandler)
 	r.HandleFunc("/", DefaultHandler)
