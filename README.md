@@ -20,7 +20,7 @@ Hello Service
   * [counts](#counts)
   * [health](#health)
   * [health/cluster](#healthcluster)
-- [What Next?](#what-next-)
+- [What Next?](#what-next)
 
 ----------
 
