@@ -81,12 +81,13 @@ The following must be set up locally:
 
 ### Deploying the Infrastructure
  1. Navigate into the `deployment` directory of the project source.
- 2. Run `terraform plan`. Follow the prompts. This will provide an overview of the infrastructure that will be deployed. Ensure that there are no errors before proceeding.
- 3. Run `terraform apply`. Follow the prompts. This command will instantiate the infrastructure required to run Hello Service on AWS, and may take a few moments. 
- 4. Run `terraform show`. This provides an overview of the deployed infrastructure. 
- 5. Search for `aws_elasticache_cluster`. Add the value of `cache_nodes.0.address` to your clipboard.
- 6. In the project source directory, create a file called `task_revision.json`, pasting the contents of `task_revision_example.json`. Paste the value in your clipboard into the REDIS_CLUSTER_ADDRESS.
- 7. Use `terraform show` to obtain the `repository_url` from `aws_ecr_repository.hello-repository`. Update the appropriate value in the `task_revision.json` file. Do not include the leading `https://`. Setting up the `task_revision.json` file is necessary for deploying service updates in the future.
+ 2. Run `terraform get`. This will install any terraform modules used.
+ 3. Run `terraform plan`. Follow the prompts. This will provide an overview of the infrastructure that will be deployed. Ensure that there are no errors before proceeding.
+ 4. Run `terraform apply`. Follow the prompts. This command will instantiate the infrastructure required to run Hello Service on AWS, and may take a few moments. 
+ 5. Run `terraform show`. This provides an overview of the deployed infrastructure. 
+ 6. Search for `aws_elasticache_cluster`. Add the value of `cache_nodes.0.address` to your clipboard.
+ 7. In the project source directory, create a file called `task_revision.json`, pasting the contents of `task_revision_example.json`. Paste the value in your clipboard into the REDIS_CLUSTER_ADDRESS.
+ 8. Use `terraform show` to obtain the `repository_url` from `aws_ecr_repository.hello-repository`. Update the appropriate value in the `task_revision.json` file. Do not include the leading `https://`. Setting up the `task_revision.json` file is necessary for deploying service updates in the future.
  > **Note:**
 > The `terraform.tfstate` and `terraform.tfstate.backup` files that are generated should be kept (and likely committed to version control). These are necessary to iterate on the infrastructure of the service.
 
