@@ -16,10 +16,10 @@ Hello Service
   * [Requirements](#requirements-2)
   * [Updating the Service](#updating-the-service)
 - [Endpoints](#endpoints)
-  * [/hello/{name}](#hello--name-)
-  * [/counts](#counts)
-  * [/health](#health)
-  * [/health/cluster](#health-cluster)
+  * [hello/{name}](#hello--name-)
+  * [counts](#counts)
+  * [health](#health)
+  * [health/cluster](#health-cluster)
 - [What Next?](#what-next-)
 
 ----------
@@ -129,12 +129,14 @@ The following must be set up locally:
 
 ## Endpoints
 
+
 ### hello/{name}
 
 Outputs a hello message including the provided name, and updates a Sorted Set on Redis, containing the name and a score of how many times the name was provided to this endpoint.
 #### Example Output
 
     Hello, "{name}"
+
 
 ### counts
 
@@ -154,6 +156,7 @@ Outputs a JSON structure containing the names that have been provided to the hel
 	    }
 	  ]
 	}
+
 
 ### health
 
@@ -181,6 +184,7 @@ Local Machine:
    	  "total_ram_bytes_used": 95997952,
    	  "total_ram_bytes_available": 947920896
    	}
+
 
 ### health/cluster
 
@@ -223,6 +227,7 @@ Local Machine:
          }
        ]
      }
+
 
 ## What Next?
 Improvements to consider for future iterations of Hello Service:
